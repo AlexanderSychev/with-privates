@@ -133,3 +133,14 @@ export default function withPrivates<
         };
     };
 }
+
+/** "withPrivates" function type */
+export type withPrivatesType = typeof withPrivates;
+
+// Declare Decision Table constructor in global namespace
+declare global {
+    interface Window {
+        withPrivates: withPrivatesType;
+    }
+    const withPrivates: withPrivatesType;
+}

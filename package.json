@@ -1,12 +1,12 @@
 {
     "name": "with-privates",
-    "version": "1.0.0",
+    "version": "0.5.0",
     "main": "dist/withPrivates.js",
     "types": "dist/withPrivates.d.ts",
     "license": "MIT",
     "scripts": {
         "clean": "node clean.js",
-        "compile": "tsc",
+        "compile": "tsc && webpack --env=development && webpack --env=production",
         "lint": "tslint ./src/**/*.ts -t stylish --project tsconfig.json",
         "comb": "prettier --write \"**/*.{ts,tsx}\"",
         "prepublish": "yarn clean && yarn compile",
@@ -23,7 +23,9 @@
         "tslint": "5.9.1",
         "tslint-config-airbnb": "5.5.0",
         "tslint-config-prettier": "1.6.0",
-        "typescript": "2.8.3"
+        "typescript": "2.8.3",
+        "ts-loader": "3.2.0",
+        "webpack": "3.9.1"
     },
     "dependencies": {
         "tslib": "1.9.1"

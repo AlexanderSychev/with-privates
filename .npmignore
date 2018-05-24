@@ -1,0 +1,9 @@
+!dist/
+src/
+clean.js
+.prettierrc.json
+.prettierignore
+tsconfig.json
+tsconfig.webpack.json
+tslint.json
+webpack.config.js
