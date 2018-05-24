@@ -7,3 +7,4 @@ tsconfig.json
 tsconfig.webpack.json
 tslint.json
 webpack.config.js
+webpack.showcase.js
