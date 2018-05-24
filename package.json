@@ -1,9 +1,13 @@
 {
     "name": "with-privates",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "main": "dist/withPrivates.js",
     "types": "dist/withPrivates.d.ts",
     "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/AlexanderSychev/with-privates.git"
+    },
     "scripts": {
         "clean": "node clean.js",
         "compile": "yarn compile:node && yarn compile:dev && yarn compile:prod && yarn compile:showcase",
