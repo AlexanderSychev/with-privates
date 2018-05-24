@@ -9,16 +9,13 @@ export interface PrivatesDefault extends Object {
 }
 
 /** Signature of internal enhancer setter for private fields */
-export type SetValues<Privates extends PrivatesDefault = PrivatesDefault> = (values: Partial<Privates>) => void;
+export type SetValues<Privates = PrivatesDefault> = (values: Partial<Privates>) => void;
 
 /** Setter signature */
 export type Setter = (...args: any[]) => void;
 
 /** Setter factory function. Creates setter by actual properties values. */
-export type SetterFactory<Props, Privates extends PrivatesDefault = PrivatesDefault> = (
-    props: Props,
-    setValues: SetValues<Privates>,
-) => Setter;
+export type SetterFactory<Props, Privates = PrivatesDefault> = (props: Props, setValues: SetValues<Privates>) => Setter;
 
 /** Setters default signature */
 export type SettersDefault = {
@@ -26,20 +23,15 @@ export type SettersDefault = {
 };
 
 /** Setters properties default signature */
-export type SettersFactories<
-    Props,
-    Setters extends SettersDefault = SettersDefault,
-    Privates extends PrivatesDefault = PrivatesDefault
-> = { [K in keyof Setters]: SetterFactory<Props, Privates> };
+export type SettersFactories<Props, Setters = SettersDefault, Privates = PrivatesDefault> = {
+    [K in keyof Setters]: SetterFactory<Props, Privates>
+};
 
 /** Getter signature */
 export type Getter = (...args: any[]) => any;
 
 /** Getter factory function. Creates getter by actual properties values. */
-export type GetterFactory<Props, Privates extends PrivatesDefault = PrivatesDefault> = (
-    props: Props,
-    privates: Privates,
-) => Getter;
+export type GetterFactory<Props, Privates = PrivatesDefault> = (props: Props, privates: Privates) => Getter;
 
 /** Getters default signature */
 export type GettersDefault = {
@@ -47,18 +39,14 @@ export type GettersDefault = {
 };
 
 /** Getters properties default signature */
-export type GettersFactories<
-    Props,
-    Getters extends GettersDefault = GettersDefault,
-    Privates extends PrivatesDefault = PrivatesDefault
-> = { [K in keyof Getters]: GetterFactory<Props, Privates> };
+export type GettersFactories<Props, Getters = GettersDefault, Privates = PrivatesDefault> = {
+    [K in keyof Getters]: GetterFactory<Props, Privates>
+};
 
 /** Private variables High-Order Component */
-export type WithPrivatesHOC<
-    Props,
-    Setters extends SettersDefault = SettersDefault,
-    Getters extends GettersDefault = GettersDefault
-> = (component: React.ComponentClass<Props & Setters & Getters>) => React.ComponentClass<Props>;
+export type WithPrivatesHOC<Props, Setters = SettersDefault, Getters = GettersDefault> = (
+    component: React.ComponentType<Props & Setters & Getters>,
+) => React.ComponentType<Props>;
 
 /** Entity of some type or function which maps this entity by initial component props */
 export type TypeOrTypeMapper<Props, Type> = ((initialProps: Props) => Type) | Type;
@@ -66,9 +54,9 @@ export type TypeOrTypeMapper<Props, Type> = ((initialProps: Props) => Type) | Ty
 /** Private variables High-Order Component creator */
 export default function withPrivates<
     Props,
-    Privates extends PrivatesDefault = PrivatesDefault,
-    Setters extends SettersDefault = SettersDefault,
-    Getters extends GettersDefault = GettersDefault
+    Privates = PrivatesDefault,
+    Setters = SettersDefault,
+    Getters = GettersDefault
 >(
     privates: TypeOrTypeMapper<Props, Privates> = <Privates>{},
     setters: TypeOrTypeMapper<Props, SettersFactories<Props, Setters, Privates>> = <SettersFactories<
@@ -82,7 +70,7 @@ export default function withPrivates<
         Privates
     >>{},
 ): WithPrivatesHOC<Props, Setters, Getters> {
-    return function(component: React.ComponentClass<Props & Setters & Getters>) {
+    return function(component: React.ComponentType<Props & Setters & Getters>) {
         /** High-Order Component class */
         return class WithPrivatesComponent extends React.Component<Props> {
             /** Private variables set */
@@ -95,11 +83,7 @@ export default function withPrivates<
             public constructor(props: Props, context?: any) {
                 super(props, context);
                 this.setValues = this.setValues.bind(this);
-                this.initItems();
-            }
-            /** @override */
-            public componentWillReceiveProps(newProps: Props) {
-                this.initItems();
+                this.initItems(this.props);
             }
             /** @override */
             public render() {
@@ -119,16 +103,13 @@ export default function withPrivates<
             }
             /** Set new values to privates */
             private setValues(values: Partial<Privates>): void {
-                this.privates = {
-                    ...(<any>this.privates),
-                    ...(<any>values),
-                };
+                Object.keys(values).forEach(key => (this.privates[key] = values[key]));
             }
             /** Re-init items */
-            private initItems(): void {
-                this.privates = isFunction(privates) ? privates(this.props) : privates;
-                this.settersFactories = isFunction(setters) ? setters(this.props) : setters;
-                this.gettersFactories = isFunction(getters) ? getters(this.props) : getters;
+            private initItems(props: Props): void {
+                this.privates = isFunction(privates) ? privates(props) : privates;
+                this.settersFactories = isFunction(setters) ? setters(props) : setters;
+                this.gettersFactories = isFunction(getters) ? getters(props) : getters;
             }
         };
     };

@@ -3,19 +3,11 @@
 const webpack = require('webpack');
 const path = require('path');
 
-const getPlugins = (env) => {
-    const plugins = [];
-    if (env === 'production') {
-        plugins.push(new webpack.optimize.UglifyJsPlugin());
-    }
-    return plugins
-};
-
-const getFileName = (env) => (`with-privates.${env === 'production' ? 'prod' : 'dev'}.js`);
-
-module.exports = env => ({
-    plugins: getPlugins(env),
-    entry: path.join(__dirname, 'src', 'withPrivates.ts'),
+module.exports = {
+    plugins: [
+        new webpack.optimize.UglifyJsPlugin()
+    ],
+    entry: path.join(__dirname, 'src', 'showCase.tsx'),
     module: {
         rules: [
             {
@@ -36,14 +28,12 @@ module.exports = env => ({
         extensions: ['.tsx', '.ts', '.js'],
     },
     output: {
-        filename: getFileName(env),
+        filename: 'show-case.js',
         path: path.join(__dirname, 'dist'),
-        library: 'withPrivates',
-        libraryExport: 'default',
     },
     externals: {
         'react': 'React',
         'react-dom': 'ReactDOM',
         './withPrivates': 'withPrivates',
     }
-});
+};
