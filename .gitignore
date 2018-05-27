@@ -64,3 +64,6 @@ typings/
 
 dist/
 .idea/
+lib/
+es6-module/
+test/

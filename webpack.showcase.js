@@ -25,15 +25,17 @@ module.exports = {
         ],
     },
     resolve: {
+        alias: {
+            './withPrivates': path.join(__dirname, 'es6-module', 'withPrivates.js')
+        },
         extensions: ['.tsx', '.ts', '.js'],
     },
     output: {
         filename: 'show-case.js',
-        path: path.join(__dirname, 'dist'),
+        path: path.join(__dirname, 'test'),
     },
     externals: {
         'react': 'React',
         'react-dom': 'ReactDOM',
-        './withPrivates': 'withPrivates',
     }
 };

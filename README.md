@@ -20,9 +20,11 @@ See example at ["showCase.tsx"](https://github.com/AlexanderSychev/with-privates
 
 ## Bundling with Webpack
 
+### Use ready bundles
+
 You can use one of browser bundles of this package:
-* `with-privates/dist/with-privates.dev.js` - uncompressed library (for development);
-* `with-privates/dist/with-privates.prod.js` - compressed library (for production).
+* `with-privates/lib/with-privates.dev.js` - uncompressed library (for development);
+* `with-privates/lib/with-privates.prod.js` - compressed library (for production).
 
 Both libraries provides "withPrivates" function as global variable.
 
@@ -49,4 +51,28 @@ At your page:
 <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
 <script src="node_modules/with-privates/dist/with-privates.dev.js"></script>
 <script src="path/to/your/bundle"></script>
+```
+
+#### Use ES6 modules
+
+You can use version of modules, which use ECMAScript 6 Modules (see subdirectory `es6-module` of module directory).
+It's may be useful for tree-shaking support:
+
+```javascript
+module.exports = {
+    // ...
+    // Your configuration
+    // ...
+    resolve: {
+        // ...
+        // Your resolving options
+        // ...
+        alias: {
+            // ...
+            // Your aliases
+            // ...
+            'with-privates': 'with-privates/es6-module/withPrivates.js'
+        },
+    }
+};
 ```

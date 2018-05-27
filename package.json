@@ -1,6 +1,6 @@
 {
     "name": "with-privates",
-    "version": "1.0.2",
+    "version": "1.0.4",
     "main": "dist/withPrivates.js",
     "types": "dist/withPrivates.d.ts",
     "license": "MIT",
@@ -10,8 +10,9 @@
     },
     "scripts": {
         "clean": "node clean.js",
-        "compile": "yarn compile:node && yarn compile:dev && yarn compile:prod && yarn compile:showcase",
-        "compile:node": "tsc",
+        "compile": "yarn compile:cjs && yarn compile:es6m && yarn compile:dev && yarn compile:prod && yarn compile:showcase",
+        "compile:cjs": "tsc",
+        "compile:es6m": "tsc --project tsconfig.es6-modules.json",
         "compile:dev": "webpack --env=development",
         "compile:prod": "webpack --env=production",
         "compile:showcase": "webpack --config=webpack.showcase.js",

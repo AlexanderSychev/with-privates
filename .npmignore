@@ -1,4 +1,7 @@
 !dist/
+!lib/
+!es6-module/
+!test/
 src/
 clean.js
 .prettierrc.json

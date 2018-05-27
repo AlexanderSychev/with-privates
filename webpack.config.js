@@ -37,7 +37,7 @@ module.exports = env => ({
     },
     output: {
         filename: getFileName(env),
-        path: path.join(__dirname, 'dist'),
+        path: path.join(__dirname, 'lib'),
         library: 'withPrivates',
         libraryExport: 'default',
     },
