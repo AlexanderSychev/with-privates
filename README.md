@@ -18,144 +18,154 @@ npm install react with-privates --save
 
 ```typescript jsx
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import withPrivates, { WithPrivatesHOC } from 'with-privates';
 
-interface Privates {
-    foo: string;
-    bar: string;
+/** Check that value is function */
+const isFunction = (value: any): value is Function => typeof value === 'function';
+
+/** With privates component instance */
+export type IWithPrivatesComponent<Props> = React.Component<Props & React.Attributes>;
+
+/** Refs for enhanced component and source component */
+export type WithRefs<Props, T = React.ReactInstance> = {
+    /** Reference to enhanced component */
+    ref?: React.Ref<IWithPrivatesComponent<Props>>;
+    /** Reference to source component */
+    innerRef?: React.Ref<T>;
+};
+
+/** Private fields signature */
+export interface PrivatesDefault extends Object {
+    [key: string]: any;
 }
 
-interface BaseProps {
-    foo: string;
-    test: string;
-}
+/** Signature of internal enhancer setter for private fields */
+export type SetValues<Privates = PrivatesDefault> = (values: Partial<Privates>) => void;
 
-interface Getters {
-    getFoo(): string;
-    getBar(): string;
-}
+/** Setter signature */
+export type Setter = (...args: any[]) => void;
 
-interface Setters {
-    setFoo(foo: string): void;
-    setBar(bar: string): void;
-}
+/** Setter factory function. Creates setter by actual properties values. */
+export type SetterFactory<Props, Privates = PrivatesDefault> = (props: Props, setValues: SetValues<Privates>) => Setter;
 
-type Props = BaseProps & Getters & Setters;
+/** Setters default signature */
+export type SettersDefault = {
+    [key: string]: Setter;
+};
 
-const SomeFunctionalComponent: React.StatelessComponent<Props> = ({
-    getFoo,
-    getBar,
-    setFoo,
-    setBar,
-    test,
-    foo,
-}: Props) => (
-    <fieldset>
-        <legend>Component "SomeFunctionalComponent"</legend>
-        <fieldset>
-            <legend>PRIVATE VARIABLES EDITOR</legend>
-            <label>foo:</label>
-            <input type="text" onChange={event => setFoo(event.target.value)} />
-            <br />
-            <label>bar:</label>
-            <input type="text" onChange={event => setBar(event.target.value)} />
-        </fieldset>
-        <fieldset>
-            <legend>EXTERNAL PROPS:</legend>
-            <div>
-                <span>test:</span>
-                &nbsp;
-                <span>{test}</span>
-            </div>
-            <div>
-                <span>foo:</span>
-                &nbsp;
-                <span>{foo}</span>
-            </div>
-        </fieldset>
-        <button
-            type="button"
-            onClick={() => {
-                alert(`foo = ${getFoo()}\nbar = ${getBar()}`);
-            }}
-        >
-            SHOW PRIVATE VARIABLES
-        </button>
-    </fieldset>
-);
+/** Setters properties default signature */
+export type SettersFactories<Props, Setters = SettersDefault, Privates = PrivatesDefault> = {
+    [K in keyof Setters]: SetterFactory<Props, Privates>
+};
 
-// Note that "withPrivates" is factory function which creates
-// HOC by settled initial private fields, setters and getters
-const SomeFunctionalComponentEnhancer: WithPrivatesHOC<BaseProps, Setters, Getters> = withPrivates<
-    BaseProps,
-    Privates,
-    Setters,
-    Getters
+/** Getter signature */
+export type Getter = (...args: any[]) => any;
+
+/** Getter factory function. Creates getter by actual properties values. */
+export type GetterFactory<Props, Privates = PrivatesDefault> = (props: Props, privates: Privates) => Getter;
+
+/** Getters default signature */
+export type GettersDefault = {
+    [key: string]: Getter;
+};
+
+/** Getters properties default signature */
+export type GettersFactories<Props, Getters = GettersDefault, Privates = PrivatesDefault> = {
+    [K in keyof Getters]: GetterFactory<Props, Privates>
+};
+
+/** Private variables High-Order Component */
+export type WithPrivatesHOC<
+    Props,
+    Setters = SettersDefault,
+    Getters = GettersDefault,
+    Instance = React.Component<Props>
+> = (
+    component: React.ComponentType<Props & Setters & Getters>,
+) => React.ComponentType<Props & WithRefs<Props, Instance> & React.Attributes>;
+
+/** Entity of some type or function which maps this entity by initial component props */
+export type TypeOrTypeMapper<Props, Type> = ((initialProps: Props) => Type) | Type;
+
+/** Private variables High-Order Component creator */
+export default function withPrivates<
+    Props,
+    Privates = PrivatesDefault,
+    Setters = SettersDefault,
+    Getters = GettersDefault,
+    Instance = React.Component<Props>
 >(
-    props => ({
-        foo: props.foo,
-        bar: 'bar',
-    }),
-    {
-        setFoo: (props, setValues) => foo => setValues({ foo }),
-        setBar: (props, setValues) => bar => setValues({ bar }),
-    },
-    {
-        getFoo: (props, privates) => () => privates.foo,
-        getBar: (props, privates) => () => privates.bar,
-    },
-);
-
-// Component, enhanced by created HOC
-const EnhancedSomeFunctionalComponents = SomeFunctionalComponentEnhancer(SomeFunctionalComponent);
-
-interface ShowCaseState {
-    foo: string;
-    test: string;
-}
-
-class ShowCase extends React.Component<{}, ShowCaseState> {
-    public constructor(props: {}, context: any) {
-        super(props, context);
-        this.state = {
-            foo: 'foo',
-            test: 'test',
+    privates: TypeOrTypeMapper<Props, Privates> = <Privates>{},
+    setters: TypeOrTypeMapper<Props, SettersFactories<Props, Setters, Privates>> = <SettersFactories<
+        Props,
+        Setters,
+        Privates
+    >>{},
+    getters: TypeOrTypeMapper<Props, GettersFactories<Props, Getters, Privates>> = <GettersFactories<
+        Props,
+        Getters,
+        Privates
+    >>{},
+): WithPrivatesHOC<Props, Setters, Getters, Instance> {
+    return function(
+        component: React.ComponentType<Props & Setters & Getters & React.Attributes & WithRefs<Props, Instance>>,
+    ): React.ComponentType<Props & React.Attributes & WithRefs<Props, Instance>> {
+        /** High-Order Component class */
+        return class WithPrivatesComponent extends React.Component<
+            Props & WithRefs<Props, Instance> & React.Attributes
+        > implements IWithPrivatesComponent<Props> {
+            /** Private variables set */
+            private privates: Privates;
+            /** Setters factories */
+            private settersFactories: SettersFactories<Props, Setters, Privates>;
+            /** Getters factories */
+            private gettersFactories: GettersFactories<Props, Getters, Privates>;
+            /** @constructor */
+            public constructor(props: Props & React.Attributes & WithRefs<Props, Instance>, context?: any) {
+                super(props, context);
+                this.setValues = this.setValues.bind(this);
+                this.initItems(<any>this.props);
+            }
+            /** @override */
+            public render() {
+                const getters: Getters = <Getters>{};
+                Object.keys(this.gettersFactories).forEach(key => {
+                    getters[key] = this.gettersFactories[key](<any>this.props, this.privates);
+                });
+                const setters: Setters = <Setters>{};
+                Object.keys(this.settersFactories).forEach(key => {
+                    setters[key] = this.settersFactories[key](<any>this.props, this.setValues);
+                });
+                return React.createElement(component, {
+                    ...(<any>this.props),
+                    ...(<any>getters),
+                    ...(<any>setters),
+                    ref: this.props.innerRef,
+                });
+            }
+            /** Set new values to privates */
+            private setValues(values: Partial<Privates>): void {
+                Object.keys(values).forEach(key => (this.privates[key] = values[key]));
+            }
+            /** Re-init items */
+            private initItems(props: Props): void {
+                this.privates = isFunction(privates) ? privates(props) : privates;
+                this.settersFactories = isFunction(setters) ? setters(props) : setters;
+                this.gettersFactories = isFunction(getters) ? getters(props) : getters;
+            }
         };
-    }
-    public render() {
-        return (
-            <fieldset>
-                <legend>"with-privates" package showcase</legend>
-                <fieldset>
-                    <legend>State editor</legend>
-                    <label>foo:</label>
-                    <input
-                        type="text"
-                        value={this.state.foo}
-                        onChange={event => this.setState({ foo: event.target.value })}
-                    />
-                    <br />
-                    <label>test:</label>
-                    <input
-                        type="text"
-                        value={this.state.test}
-                        onChange={event => this.setState({ test: event.target.value })}
-                    />
-                </fieldset>
-                <hr />
-                <EnhancedSomeFunctionalComponents foo={this.state.foo} test={this.state.test} />
-            </fieldset>
-        );
-    }
+    };
 }
 
-function onLoad() {
-    const root = document.getElementById('root');
-    ReactDOM.render(<ShowCase />, root);
-}
+/** "withPrivates" function type */
+export type withPrivatesType = typeof withPrivates;
 
-window.addEventListener('load', onLoad);
+// Declare Decision Table constructor in global namespace
+declare global {
+    interface Window {
+        withPrivates: withPrivatesType;
+    }
+    const withPrivates: withPrivatesType;
+}
 ```
 
 ## Bundling with Webpack

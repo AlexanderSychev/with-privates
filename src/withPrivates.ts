@@ -3,6 +3,17 @@ import * as React from 'react';
 /** Check that value is function */
 const isFunction = (value: any): value is Function => typeof value === 'function';
 
+/** With privates component instance */
+export type IWithPrivatesComponent<Props> = React.Component<Props & React.Attributes>;
+
+/** Refs for enhanced component and source component */
+export type WithRefs<Props, T = React.ReactInstance> = {
+    /** Reference to enhanced component */
+    ref?: React.Ref<IWithPrivatesComponent<Props>>;
+    /** Reference to source component */
+    innerRef?: React.Ref<T>;
+};
+
 /** Private fields signature */
 export interface PrivatesDefault extends Object {
     [key: string]: any;
@@ -44,9 +55,14 @@ export type GettersFactories<Props, Getters = GettersDefault, Privates = Private
 };
 
 /** Private variables High-Order Component */
-export type WithPrivatesHOC<Props, Setters = SettersDefault, Getters = GettersDefault> = (
+export type WithPrivatesHOC<
+    Props,
+    Setters = SettersDefault,
+    Getters = GettersDefault,
+    Instance = React.Component<Props>
+> = (
     component: React.ComponentType<Props & Setters & Getters>,
-) => React.ComponentType<Props>;
+) => React.ComponentType<Props & WithRefs<Props, Instance> & React.Attributes>;
 
 /** Entity of some type or function which maps this entity by initial component props */
 export type TypeOrTypeMapper<Props, Type> = ((initialProps: Props) => Type) | Type;
@@ -56,7 +72,8 @@ export default function withPrivates<
     Props,
     Privates = PrivatesDefault,
     Setters = SettersDefault,
-    Getters = GettersDefault
+    Getters = GettersDefault,
+    Instance = React.Component<Props>
 >(
     privates: TypeOrTypeMapper<Props, Privates> = <Privates>{},
     setters: TypeOrTypeMapper<Props, SettersFactories<Props, Setters, Privates>> = <SettersFactories<
@@ -69,10 +86,13 @@ export default function withPrivates<
         Getters,
         Privates
     >>{},
-): WithPrivatesHOC<Props, Setters, Getters> {
-    return function(component: React.ComponentType<Props & Setters & Getters>) {
+): WithPrivatesHOC<Props, Setters, Getters, Instance> {
+    return function(
+        component: React.ComponentType<Props & Setters & Getters & React.Attributes & WithRefs<Props, Instance>>,
+    ): React.ComponentType<Props & React.Attributes & WithRefs<Props, Instance>> {
         /** High-Order Component class */
-        return class WithPrivatesComponent extends React.Component<Props> {
+        return class WithPrivatesComponent extends React.Component<Props & WithRefs<Props, Instance> & React.Attributes>
+            implements IWithPrivatesComponent<Props> {
             /** Private variables set */
             private privates: Privates;
             /** Setters factories */
@@ -80,25 +100,26 @@ export default function withPrivates<
             /** Getters factories */
             private gettersFactories: GettersFactories<Props, Getters, Privates>;
             /** @constructor */
-            public constructor(props: Props, context?: any) {
+            public constructor(props: Props & React.Attributes & WithRefs<Props, Instance>, context?: any) {
                 super(props, context);
                 this.setValues = this.setValues.bind(this);
-                this.initItems(this.props);
+                this.initItems(<any>this.props);
             }
             /** @override */
             public render() {
                 const getters: Getters = <Getters>{};
                 Object.keys(this.gettersFactories).forEach(key => {
-                    getters[key] = this.gettersFactories[key](this.props, this.privates);
+                    getters[key] = this.gettersFactories[key](<any>this.props, this.privates);
                 });
                 const setters: Setters = <Setters>{};
                 Object.keys(this.settersFactories).forEach(key => {
-                    setters[key] = this.settersFactories[key](this.props, this.setValues);
+                    setters[key] = this.settersFactories[key](<any>this.props, this.setValues);
                 });
                 return React.createElement(component, {
                     ...(<any>this.props),
                     ...(<any>getters),
                     ...(<any>setters),
+                    ref: this.props.innerRef,
                 });
             }
             /** Set new values to privates */

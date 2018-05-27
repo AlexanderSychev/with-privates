@@ -10,6 +10,7 @@ interface Privates {
 interface BaseProps {
     foo: string;
     test: string;
+    children?: React.ReactNode;
 }
 
 interface Getters {
@@ -31,6 +32,7 @@ const SomeFunctionalComponent: React.StatelessComponent<Props> = ({
     setBar,
     test,
     foo,
+    children,
 }: Props) => (
     <fieldset>
         <legend>Component "SomeFunctionalComponent"</legend>
@@ -63,15 +65,19 @@ const SomeFunctionalComponent: React.StatelessComponent<Props> = ({
         >
             SHOW PRIVATE VARIABLES
         </button>
+        <div>
+            CHILDREN:
+            <div>{children}</div>
+        </div>
     </fieldset>
 );
 
-const SomeFunctionalComponentEnhancer: WithPrivatesHOC<BaseProps, Setters, Getters> = withPrivates<
+const SomeFunctionalComponentEnhancer: WithPrivatesHOC<
     BaseProps,
-    Privates,
     Setters,
-    Getters
->(
+    Getters,
+    React.StatelessComponent<Props>
+> = withPrivates<BaseProps, Privates, Setters, Getters, React.StatelessComponent<Props>>(
     props => ({
         foo: props.foo,
         bar: 'bar',
@@ -122,7 +128,10 @@ class ShowCase extends React.Component<{}, ShowCaseState> {
                     />
                 </fieldset>
                 <hr />
-                <EnhancedSomeFunctionalComponents foo={this.state.foo} test={this.state.test} />
+                <EnhancedSomeFunctionalComponents foo={this.state.foo} test={this.state.test}>
+                    <div>Child 1</div>
+                    <div>Child 2</div>
+                </EnhancedSomeFunctionalComponents>
             </fieldset>
         );
     }
